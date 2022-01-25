@@ -13,12 +13,15 @@ import org.springframework.data.redis.connection.jedis.JedisClientConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
-//import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import nus.iss.day18weather.Day18weatherApplication;
+import static nus.iss.day18weather.Constants.*;
+
 @Configuration
-public class RedisConfig {
-    private static final Logger logger = Logger.getLogger(RedisConfig.class.getName());
+public class AppConfig {
+    private static final Logger logger = Logger.getLogger(Day18weatherApplication.class.getName());
 
     @Value("${spring.redis.host}")
     private String redisHost;
@@ -26,32 +29,46 @@ public class RedisConfig {
     @Value("${spring.redis.port}")
     private Optional<Integer> redisPort;
 
-    @Value("${spring.redis.password}")
-    private String redisPassword;
+    @Value("${spring.redis.database}")
+    private Integer redisDatabase;
 
-    //@Bean
-    @Scope("singleton")
-    public RedisTemplate<String, Object> createRedisTemplate() {
+    // private final String redisPassword;
+
+    // public AppConfig() {
+    //     redisPassword = System.getenv(ENV_REDIS_PW);
+    // }
+
+    @Bean(BEAN_WEATHER_CACHE)
+    // @Scope("singleton") why not needed? - Scope is singleton by default
+    public RedisTemplate<String, String> createRedisTemplate() {
         final RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
         config.setHostName(redisHost);
         if (redisPort.isPresent())
             config.setPort(redisPort.get());
-        config.setPassword(redisPassword);
+        // if (null != redisPassword) {
+        //     config.setPassword(redisPassword);
+        //     logger.info("Redis password set!");
+        // } else {
+        //     logger.warning("Redis password not set!"); // set password in env variables
+        //     System.exit(1);
+        // }
+        config.setDatabase(redisDatabase);
 
         final JedisClientConfiguration jedisClient = JedisClientConfiguration.builder().build();
         final JedisConnectionFactory jedisFac = new JedisConnectionFactory(config, jedisClient);
         jedisFac.afterPropertiesSet();
-        logger.log(Level.INFO, "redis host: %s, port: %s".formatted(redisHost, redisPort));
+        logger.log(Level.INFO, "redis host: %s, port: %s".formatted(redisHost, redisPort.get()));
 
         // Use String instead of Object -> Object is broader and malicious objects can be used
-        final RedisTemplate<String, Object> template = new RedisTemplate<>();
+        final RedisTemplate<String, String> template = new RedisTemplate<>();
         template.setConnectionFactory(jedisFac);
         template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new StringRedisSerializer());
         // from slides, different from kenneth
         // String serializer is preferred over Object serializer
         // template.setValueSerializer(new StringRedisSerializer());
         // RedisSerializer<Object> objSerializer = new JdkSerializationRedisSerializer(getClass().getClassLoader());
-        template.setValueSerializer(new JdkSerializationRedisSerializer(getClass().getClassLoader()));
+        // template.setValueSerializer(new JdkSerializationRedisSerializer(getClass().getClassLoader()));
         return template;
     }
 }

@@ -4,9 +4,39 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <title data-th-text="${city}"></title>
 </head>
 <body>
-    <h1>Weather of <span></span></h1>
+
+    <section>
+        <h1>Weather of <span data-th-text="${city}"></span></h1>
+    </section>
+    <section>
+        <table>
+            <thead>
+                <tr>
+                    <th>City</th>
+                    <th>Weather</th>
+                    <th>Description</th>
+                    <th>Icon</th>
+                    <th>Temperature (metric unit)</th>
+                </tr>
+            </thead>
+            <tbody data-th-object="${weather}">
+                <tr>
+                    <td data-th-text="*{cityName}"></td>
+                    <td data-th-text="*{main}"></td>
+                    <td data-th-text="*{description}"></td>
+                    <td><img data-th-src="@{*{icon}}"></td>
+                    <td data-th-text="*{temperature}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section>
+        <button type="button"><a href="/">Back</a></button>
+    </section>
+
 </body>
 </html>
